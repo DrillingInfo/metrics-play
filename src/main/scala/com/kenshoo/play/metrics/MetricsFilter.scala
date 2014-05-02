@@ -60,26 +60,26 @@ abstract class MetricsFilter extends RecoverFilter {
 
   override def apply(next: (RequestHeader) => Future[SimpleResult])(rh: RequestHeader): Future[SimpleResult] = {
 
-      val context = requestsTimer.time()
-      // Force instantiation of meters
-      otherStatuses
-      statusLevelMeters
-      statusCodes
+    val context = requestsTimer.time()
+    // Force instantiation of meters
+    otherStatuses
+    statusLevelMeters
+    statusCodes
 
-      def logCompleted(result: SimpleResult): SimpleResult = {
-        activeRequests.dec()
-        context.stop()
-        statusCodes.getOrElse(result.header.status, otherStatuses).mark()
-        statusLevelMeters.get(statusLevel(result.header.status)).map(_.mark)
-        result
-      }
+    def logCompleted(result: SimpleResult): SimpleResult = {
+      activeRequests.dec()
+      context.stop()
+      statusCodes.getOrElse(result.header.status, otherStatuses).mark()
+      statusLevelMeters.get(statusLevel(result.header.status)).map(_.mark)
+      result
+    }
 
-      activeRequests.inc()
-      next(rh).recover {
-        case t: Throwable =>
-          Logger.error(s" Got an error: $t")
-          Results.InternalServerError
-      }.map(logCompleted)
+    activeRequests.inc()
+    next(rh).recover {
+      case t: Throwable =>
+        Logger.error(s"Unhandled exception: ${t.getMessage}", t)
+        Results.InternalServerError
+    }.map(logCompleted)
   }
 
   /** The name of the status level of an HTTP status code (e.g., "2xx", "5xx") */
