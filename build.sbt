@@ -8,8 +8,6 @@ scalaVersion := "2.10.2"
 
 crossScalaVersions := Seq("2.10.2", "2.11.1")
 
-resolvers += "Maven Central" at "http://repo1.maven.org/maven2/"
-
 testOptions in Test += Tests.Argument("junitxml", "console")
 
 resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
@@ -38,8 +36,6 @@ publishTo <<= version { (v: String) =>
 pomIncludeRepository := { _ => false }
 
 publishArtifact in Test := false
-
-publishMavenStyle := true
 
 pomExtra := (
   <url>https://github.com/kenshoo/metrics-play</url>
