@@ -83,7 +83,7 @@ abstract class MetricsFilter extends RecoverFilter {
       statusLevelMeters
       statusCodes
 
-      def logCompleted(result: SimpleResult): SimpleResult = {
+      def logCompleted(result: Result): Result = {
         activeRequests.dec()
         context.stop()
         statusCodes.getOrElse(result.header.status, otherStatuses).mark()
