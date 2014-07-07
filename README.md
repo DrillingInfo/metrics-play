@@ -4,7 +4,7 @@ This module provides some support for @codahale [Metrics](http://metrics.codahal
 
 [![Build Status](https://travis-ci.org/kenshoo/metrics-play.png)](https://travis-ci.org/kenshoo/metrics-play)
 
-Play Version: 2.2.0, Metrics Version: 3.0.0, Scala Version: 2.10.0
+Play Version: 2.3.0, Metrics Version: 3.0.1, Scala Versions: 2.10.2, 2.11.1
 
 ## Features
 
@@ -20,7 +20,7 @@ Add metrics-play dependency:
 ```scala
     val appDependencies = Seq(
     ...
-    "com.kenshoo" %% "metrics-play" % "0.1.6"
+    "com.kenshoo" %% "metrics-play" % "2.3.0_0.1.6"
     )
 ```
 
@@ -65,15 +65,12 @@ Some configuration is supported through the default configuration file:
 
     metrics.showHttpStatusLevels - [true/false] (default is false)
 
-    metrics.knownStatuses - [list of Ints] (default is [200, 400, 403, 404, 201, 307, 500]) 
-    
-    metrics.excludedRoutes - [list of Strings] (default is empty) - regular expressions of routes that should not be measured, e.g. ["\/admin\/.*"]  (default is empty).
+    metrics.knownStatuses - [list of Ints] (default is [200, 400, 403, 404, 201, 307, 500])	
 
 ### Metrics Filter
 
 An implementation of the Metrics' instrumenting filter for Play2. It records requests duration, number of active requests and counts each return code
 
-In scala:
 
 ```scala
     import com.kenshoo.play.metrics.MetricsFilter
@@ -81,25 +78,6 @@ In scala:
 
     object Global extends WithFilters(MetricsFilter)
 ```
-
-In java:
-
-```java
-import play.GlobalSettings;
-import play.api.mvc.EssentialFilter;
-import com.kenshoo.play.metrics.MetricsFilterJava;
-
-public class Global extends GlobalSettings {
-	@Override
-	public <T extends EssentialFilter> Class<T>[] filters() {
-	    // TODO Auto-generated method stub
-	    Class<T>[] classes = new Class[] {MetricsFilterJava.class};        
-	    return classes;
-    }
-}
-```
-
-Also exceptions handling functional was added (see [here:](https://github.com/AndrewShalimov/metrics-play/blob/addExceptionHandling/src/main/scala/com/kenshoo/play/metrics/MetricsFilter.scala#L78) )
 
 ## License
 This code is released under the Apache Public License 2.0.
