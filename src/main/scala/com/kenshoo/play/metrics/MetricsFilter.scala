@@ -25,18 +25,15 @@ import com.codahale.metrics._
 import com.codahale.metrics.MetricRegistry.name
 
 import scala.collection.JavaConverters._
-import collection.JavaConversions._
-import play.Logger
-import scala.concurrent.Future
 
-abstract class MetricsFilter extends RecoverFilter {
+abstract class MetricsFilter extends EssentialFilter {
 
   def registry: MetricRegistry
 
   val knownStatuses = Seq(Status.OK, Status.BAD_REQUEST, Status.FORBIDDEN, Status.NOT_FOUND,
     Status.CREATED, Status.TEMPORARY_REDIRECT, Status.INTERNAL_SERVER_ERROR)
 
-  def requestedStatuses = {
+  lazy val requestedStatuses = {
     val userPrefStatuses = Play.configuration.getIntList("metrics.knownStatuses")
     userPrefStatuses match {
       case Some(s) => s.asScala.toList.map(x => x: Int)
@@ -44,9 +41,9 @@ abstract class MetricsFilter extends RecoverFilter {
     }
   }
 
-  def statusCodes = newMeters(requestedStatuses, requestedStatuses.map(x => x.toString))
+  lazy val statusCodes = newMeters(requestedStatuses, requestedStatuses.map(x => x.toString))
 
-  def statusLevelMeters: Map[Int, Meter] = {
+  lazy val statusLevelMeters: Map[Int, Meter] = {
     val showStatusLevelsEnabled =
       Play.configuration.getBoolean("metrics.showHttpStatusLevels").getOrElse(false)
     if (showStatusLevelsEnabled) {
@@ -58,30 +55,10 @@ abstract class MetricsFilter extends RecoverFilter {
   def requestsTimer:  Timer   = registry.timer(name(classOf[MetricsFilter], "requestTimer"))
   def activeRequests: Counter = registry.counter(name(classOf[MetricsFilter], "activeRequests"))
   def otherStatuses:  Meter   = registry.meter(name(classOf[MetricsFilter], "other"))
-  def excludedRoutes: Counter = registry.counter(name(classOf[MetricsFilter], "excludedRoutes"))
 
-  override def apply(next: (RequestHeader) => Future[SimpleResult])(rh: RequestHeader): Future[SimpleResult] = {
-
-    def nextRecover : Future[SimpleResult] = {
-      next(rh).recover {
-        case t: Throwable =>
-          Logger.error(s"Unhandled exception: ${t.getMessage}", t)
-          Results.InternalServerError
-      }
-    }
-
-    val optList:Option[List[String]] = Play.current.configuration.getStringList("metrics.excludedRoutes").map(_.toList)
-    val excludeRoutes = optList.getOrElse(List[String]())
-    if (excludeRoutes.exists(x => rh.uri.matches(x))) {
-      excludedRoutes.inc()
-      nextRecover
-    }
-    else {
+  def apply(next: EssentialAction) = new EssentialAction {
+    def apply(rh: RequestHeader) = {
       val context = requestsTimer.time()
-      // Force instantiation of meters
-      otherStatuses
-      statusLevelMeters
-      statusCodes
 
       def logCompleted(result: SimpleResult): SimpleResult = {
         activeRequests.dec()
@@ -92,10 +69,9 @@ abstract class MetricsFilter extends RecoverFilter {
       }
 
       activeRequests.inc()
-      nextRecover.map(logCompleted)
+      next(rh).map(logCompleted)
     }
   }
-
 
   /** The name of the status level of an HTTP status code (e.g., "2xx", "5xx") */
   private def statusLevelName(s: Int): String = {
