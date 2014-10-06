@@ -19,9 +19,10 @@ import java.util.concurrent.TimeUnit
 
 import play.api.{Application, Play, Plugin}
 
-import com.codahale.metrics.{MetricRegistry, SharedMetricRegistries}
+import com.codahale.metrics.{MetricSet, MetricRegistry, SharedMetricRegistries}
 import com.codahale.metrics.json.MetricsModule
 import com.codahale.metrics.jvm.{ThreadStatesGaugeSet, GarbageCollectorMetricSet, MemoryUsageGaugeSet}
+import collection.JavaConversions._
 
 import com.fasterxml.jackson.databind.ObjectMapper
 
@@ -51,9 +52,9 @@ class MetricsPlugin(val app: Application) extends Plugin {
       val registry: MetricRegistry = SharedMetricRegistries.getOrCreate(registryName)
       val jvmMetricsEnabled = app.configuration.getBoolean("metrics.jvm").getOrElse(true)
       if (jvmMetricsEnabled) {
-        registry.registerAll(new GarbageCollectorMetricSet())
-        registry.registerAll(new MemoryUsageGaugeSet())
-        registry.registerAll(new ThreadStatesGaugeSet())
+        registerAll("gs_stats", new GarbageCollectorMetricSet(), registry)
+        registerAll("mem_stats", new MemoryUsageGaugeSet(), registry)
+        registerAll("thread_stats", new ThreadStatesGaugeSet(), registry)
       }
       val module = new MetricsModule(rateUnit, durationUnit, showSamples)
       mapper.registerModule(module)
@@ -64,6 +65,12 @@ class MetricsPlugin(val app: Application) extends Plugin {
   override def onStop() {
     if (enabled) {
       SharedMetricRegistries.remove(registryName)
+    }
+  }
+
+  def registerAll(prefix: String , metricSet: MetricSet , registry: MetricRegistry) {
+    for (entry <- metricSet.getMetrics().entrySet()) {
+      registry.register(prefix + "." + entry.getKey(), entry.getValue());
     }
   }
 
