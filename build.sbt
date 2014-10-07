@@ -2,7 +2,7 @@ organization:= "com.kenshoo"
 
 name := "metrics-play"
 
-version := "2.3.0_0.1.6"
+version := "2.2.1_0.1.7"
 
 scalaVersion := "2.10.2"
 
@@ -16,9 +16,9 @@ libraryDependencies ++= Seq(
     "com.codahale.metrics" % "metrics-core" % "3.0.1",
     "com.codahale.metrics" % "metrics-json" % "3.0.1",
     "com.codahale.metrics" % "metrics-jvm" % "3.0.1",
-    "com.typesafe.play" %% "play" % "2.3.0" % "provided",
+    "com.typesafe.play" %% "play" % "2.2.1" % "provided",
     //test
-    "com.typesafe.play" %% "play-test" % "2.3.0" % "test",
+    "com.typesafe.play" %% "play-test" % "2.2.1" % "test",
     "org.specs2" %% "specs2" % "2.3.12" % "test",
     "org.mockito" % "mockito-all" % "1.9.5" % "test"
 )
